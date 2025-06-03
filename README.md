@@ -158,3 +158,13 @@ The last three characters (r-- or r-x) specify permissions for everyone else (ot
   ![Screenshot from 2024-11-30 11-07-29](https://github.com/user-attachments/assets/d8c6ded6-b5b0-4955-b5f0-cdbd083664d3)
 
   - Explanation: Adds a sticky bit, restricting file deletion to the owner.
+
+
+```bash
+| Special |     Command      | Example               |
+| ------- | ---------------- | --------------------- |
+| Setuid  | `chmod u+s file` | `chmod 4755 myprog`   |
+| Setgid  | `chmod g+s dir`  | `chmod 2755 /project` |
+| Sticky  | `chmod +t dir`   | `chmod 1777 /public`  |
+
+```
