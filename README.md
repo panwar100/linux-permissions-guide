@@ -141,30 +141,124 @@ The last three characters (r-- or r-x) specify permissions for everyone else (ot
   - Explanation: chown tom:B1 xyz: Assigns ownership of xyz to user tom and group B1.
     
 # Special Permissions  
-  **13. Set User ID (SUID):**
-        
-  ![Screenshot from 2024-11-30 11-03-37](https://github.com/user-attachments/assets/33011214-831d-4b61-bb99-9357fa0fd633)
+### 🔐 1. SetUID on a Script or Binary (File)
 
-  - Explanation: Adds SUID bit, which allows a file to execute with the owner's privileges.
-        
-  **14. Set Group ID (SGID):**
+📘 Use Case:
+Let’s say you have a script that updates system logs, but you want normal users to be able to run it with root privileges.
 
-  ![Screenshot from 2024-11-30 11-05-07](https://github.com/user-attachments/assets/d92a9c02-137d-4e09-93dc-74829b29dfad)
+⚠️ Note: SetUID only works on binaries, not on scripts like .sh (on most systems, for security reasons).
 
-   - Explanation: Adds SGID bit, which executes files with group privileges or retains group ownership in directories.
-  
-  **15. Sticky Bit:**
-          
-  ![Screenshot from 2024-11-30 11-07-29](https://github.com/user-attachments/assets/d8c6ded6-b5b0-4955-b5f0-cdbd083664d3)
+✅ Example: SetUID on a binary
+Create a simple C program:
 
-  - Explanation: Adds a sticky bit, restricting file deletion to the owner.
-
+```c
+// hello.c
+#include <stdio.h>
+int main() {
+    printf("Hello from SetUID binary!\n");
+    return 0;
+}
+```
+Compile it:
 
 ```bash
-| Special |     Command      | Example               |
-| ------- | ---------------- | --------------------- |
-| Setuid  | `chmod u+s file` | `chmod 4755 myprog`   |
-| Setgid  | `chmod g+s dir`  | `chmod 2755 /project` |
-| Sticky  | `chmod +t dir`   | `chmod 1777 /public`  |
-
+gcc hello.c -o hello
 ```
+Change owner to root:
+
+```bash
+sudo chown root:root hello
+```
+**Set SetUID:**
+
+```bash
+sudo chmod u+s hello
+```
+Check permissions:
+
+```bash
+ls -l hello
+```
+Output:
+
+```diff
+-rwsr-xr-x 1 root root 12345 hello
+```
+✅ Now if a normal user runs ./hello, it executes with root’s permissions.
+
+### 📁 2. SetGID on a Folder
+
+📘 Use Case:
+You have a shared folder /data for team members in group devops. You want all new files inside it to inherit the group devops.
+
+✅ Example:
+```bash
+# Create group and folder
+sudo groupadd devops
+sudo mkdir /data
+sudo chgrp devops /data
+```
+**SetGID on folder**
+sudo chmod 2775 /data
+Check:
+
+```bash
+ls -ld /data
+```
+Output:
+```bash
+
+drwxr-sr-x 2 root devops 4096 /data
+```
+All files created inside /data will automatically belong to group devops, even if created by another user.
+
+**🧪 Test:**
+```bash
+touch /data/testfile
+ls -l /data
+```
+You’ll see:
+
+```css
+-rw-r--r-- 1 user devops 0 testfile
+```
+### 📂 3. Sticky Bit on a Folder
+
+📘 Use Case:
+You have a public folder where all users can create files, but only the file owner can delete their own files.
+
+Common on /tmp
+
+✅ Example:
+```bash
+sudo mkdir /public
+sudo chmod 1777 /public
+```
+Check:
+
+```bash
+ls -ld /public
+```
+Output:
+
+```arduino
+drwxrwxrwt 2 root root 4096 /public
+```
+The t means Sticky Bit is set.
+
+**🧪 Test:**
+
+User A creates a file
+
+User B can see it but cannot delete it
+
+### 🔢 Summary Table
+```bash
+Type	    Symbol	  Numeric	   Example Command
+SetUID	  s (user)	    4	       chmod u+s binary_file or chmod 4755 file
+SetGID	  s (group)	    2          chmod g+s folder/ or chmod 2755 folder/
+Sticky	  t (others)	    1	       chmod +t folder/ or chmod 1777 folder/
+```
+
+
+
